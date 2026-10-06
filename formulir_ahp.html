@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Formulir survei prioritas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F1; --surface:#FFFFFF; --sunk:#F5F8F7; --ink:#18292D; --muted:#5A6A6D; --line:#D3DCDA; --line2:#E4EAE8;
+  --accent:#1D6872; --accent-ink:#FFFFFF; --accent-soft:#DCEBEC;
+  --k1:#2E7A4C; --k2:#B0741A; --k3:#3A68A2; --k4:#87918F;
+  --warn:#A8461F; --warn-soft:#F8E6DD; --good-soft:#E0EFE5;
+  --sans:"Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111A1C; --surface:#182326; --sunk:#142023; --ink:#E2EBEA; --muted:#97A8AA; --line:#2E3D40; --line2:#243235;
+    --accent:#62B4BC; --accent-ink:#0E1A1C; --accent-soft:#1F3A3E;
+    --k1:#5DB881; --k2:#E0A54A; --k3:#78A3DD; --k4:#9AA4A2; --warn:#F08A5D; --warn-soft:#3A2419; --good-soft:#1C3326;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111A1C; --surface:#182326; --sunk:#142023; --ink:#E2EBEA; --muted:#97A8AA; --line:#2E3D40; --line2:#243235;
+  --accent:#62B4BC; --accent-ink:#0E1A1C; --accent-soft:#1F3A3E;
+  --k1:#5DB881; --k2:#E0A54A; --k3:#78A3DD; --k4:#9AA4A2; --warn:#F08A5D; --warn-soft:#3A2419; --good-soft:#1C3326;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+h1{font-family:var(--serif);font-weight:600;line-height:1.15;margin:0;letter-spacing:-.01em}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.ghost:hover{color:var(--warn)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:18px}
+.card h2{font-size:16px;margin:0 0 4px;font-weight:600}
+.card h3{font-size:14px;margin:16px 0 8px;font-weight:600}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:70ch}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spacer{flex:1}
+.scroll{overflow-x:auto;max-width:100%}
+label.f{display:block;font-size:13px;color:var(--muted);margin:0 0 4px}
+input.t,textarea.t,select.t{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:var(--surface)}
+textarea.t{min-height:76px;resize:vertical}
+input.t:focus,textarea.t:focus,select.t:focus{border-color:var(--accent);outline:none}
+table{border-collapse:collapse;font-size:13.5px}
+th,td{padding:6px 8px;text-align:right;white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:12.5px;border-bottom:1px solid var(--line)}
+td{border-bottom:1px solid var(--line2)}
+th.l,td.l{text-align:left}
+td.name{white-space:normal;min-width:200px;max-width:380px;text-align:left;line-height:1.35}
+.badge{display:inline-block;padding:2px 9px;border-radius:6px;font-size:12.5px;font-weight:600}
+.badge.ok{background:var(--good-soft);color:var(--k1)}
+.badge.no{background:var(--warn-soft);color:var(--warn)}
+.badge.mute{background:var(--sunk);color:var(--muted)}
+.chip{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600;line-height:19px}
+.q-K1{background:color-mix(in srgb,var(--k1) 18%,transparent);color:var(--k1)}
+.q-K2{background:color-mix(in srgb,var(--k2) 18%,transparent);color:var(--k2)}
+.q-K3{background:color-mix(in srgb,var(--k3) 18%,transparent);color:var(--k3)}
+.q-K4{background:color-mix(in srgb,var(--k4) 20%,transparent);color:var(--k4)}
+.yes{color:var(--k1);font-weight:600}
+.fin{color:var(--warn);font-weight:600}
+.weights{display:grid;gap:12px;margin:6px 0 4px}
+.wrow{display:grid;grid-template-columns:minmax(110px,200px) 1fr 62px;gap:12px;align-items:center}
+.wbar{height:11px;background:var(--line2);border-radius:6px;overflow:hidden}
+.wbar i{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .35s ease}
+.wrow .val{font-family:var(--serif);font-size:19px;text-align:right}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw}
+.toast.on{opacity:1}
+.alert{padding:10px 14px;border-radius:8px;font-size:13.5px;margin:0 0 14px}
+.alert.warn{background:var(--warn-soft)}
+.alert.good{background:var(--good-soft)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+header{padding:26px 0 18px}
+header h1{font-size:clamp(23px,5vw,30px);max-width:26ch}
+.prog{height:5px;background:var(--line);border-radius:3px;margin:16px 0 6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .3s ease}
+.progtxt{font-size:12.5px;color:var(--muted)}
+main{padding-bottom:40px}
+.intro{font-size:15px;line-height:1.6;margin:0 0 6px;max-width:64ch}
+ol.plan{margin:0;padding-left:20px}
+ol.plan li{margin:0 0 4px}
+.fgrid{display:grid;gap:12px}
+.navbar{display:flex;align-items:center;gap:10px;position:sticky;bottom:0;padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,var(--paper) 30%)}
+.navbar .hint{flex:1;text-align:right;font-size:13px;color:var(--muted)}
+.navbar .btn{padding:10px 18px;font-size:15px}
+details.help summary{cursor:pointer;color:var(--accent);font-size:13.5px}
+details.help div{font-size:13px;color:var(--muted);margin-top:8px}
+fieldset.pair{border:1px solid var(--line);min-width:0}
+fieldset.pair.flash{border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.pairhead{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:start;margin-bottom:12px}
+.cn b{display:block;font-size:15.5px;line-height:1.3}
+.cn span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.cn.right{text-align:right}
+.vs{font-size:12.5px;color:var(--muted);padding-top:2px}
+.scale{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.scale button{border:1px solid var(--line);background:var(--sunk);border-radius:7px;padding:7px 0 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.scale button .num{font-weight:700;font-size:15px}
+.scale button .w{font-size:10px;color:var(--muted);letter-spacing:-.01em}
+.scale button.sc9{height:60px}.scale button.sc7{height:56px;margin-top:2px}.scale button.sc5{height:52px;margin-top:4px}.scale button.sc3{height:48px;margin-top:6px}.scale button.sc1{height:44px;margin-top:8px}
+.scale button:hover{border-color:var(--accent)}
+.scale button[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.scale button[aria-checked="true"] .w{color:var(--accent-ink)}
+@media (max-width:420px){.scale{gap:2px}.scale button .w{font-size:8.5px}}
+.said{margin:10px 0 0;font-size:13.5px;color:var(--muted);min-height:1.5em}
+.ctx{font-size:12.5px;color:var(--muted);margin-bottom:2px}
+ol.rank{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+ol.rank li{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line2);border-radius:8px;padding:8px 8px 8px 10px;background:var(--sunk)}
+ol.rank li.moved{border-color:var(--accent);background:var(--accent-soft)}
+ol.rank .pos{font-family:var(--serif);font-size:19px;color:var(--accent);text-align:center}
+ol.rank .it{font-size:14px;line-height:1.35}
+ol.rank .ctl{display:flex;gap:4px;align-items:center}
+ol.rank .ctl .btn{padding:4px 8px;font-size:11px}
+ol.rank select.t{width:auto;padding:4px 6px;font-size:13px}
+ul.plain{margin:0;padding-left:18px}
+ul.plain li{margin:0 0 3px}
+p.top3{font-size:13.5px;margin:0 0 6px;line-height:1.45}
+textarea.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;min-height:140px;word-break:break-all}
+a.btn{text-decoration:none;display:inline-block}
+.wrow{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) 46px;gap:10px}
+@media (max-width:540px){ol.rank li{grid-template-columns:28px 1fr;row-gap:6px}ol.rank .ctl{grid-column:2}}
+.done h2{font-family:var(--serif);font-size:22px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap"><header id="head"><h1>Formulir survei prioritas</h1></header><main id="app"></main></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+// AHP + rank-scoring engine replicating the Excel template logic.
+const ENGINE = (() => {
+  const CONV = { "-9": 9, "-7": 7, "-5": 5, "-3": 3, "1": 1, "3": 1 / 3, "5": 1 / 5, "7": 1 / 7, "9": 1 / 9 };
+  const RI = { 1: 0, 2: 0, 3: 0.58, 4: 0.9, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41, 9: 1.45, 10: 1.49, 11: 1.51, 12: 1.48, 13: 1.56, 14: 1.57, 15: 1.59 };
+  const TEMPLATE_WEIGHTS = [0.3718198280031762, 0.37848460783651705, 0.2496955641603066];
+
+  const isBlank = v => v === null || v === undefined || v === "";
+  const num = v => (isBlank(v) ? NaN : Number(v));
+  function geomean(arr) {
+    const xs = arr.filter(x => Number.isFinite(x));
+    if (!xs.length) return NaN;
+    if (xs.some(x => x <= 0)) return NaN;
+    return Math.exp(xs.reduce((s, x) => s + Math.log(x), 0) / xs.length);
+  }
+  function pairs(n) { const p = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) p.push([i, j]); return p; }
+  function convert(v) { if (isBlank(v)) return { blank: true }; const k = String(Number(v)); return k in CONV ? { val: CONV[k] } : { invalid: true }; }
+
+  function ahpFromMatrix(A) {
+    const n = A.length;
+    const colsum = A[0].map((_, j) => A.reduce((s, r) => s + r[j], 0));
+    const norm = A.map(r => r.map((x, j) => x / colsum[j]));
+    const w = norm.map(r => r.reduce((s, x) => s + x, 0) / n);
+    const lambda = colsum.reduce((s, c, j) => s + c * w[j], 0);
+    const CI = n > 1 ? (lambda - n) / (n - 1) : 0;
+    const ri = RI[n] ?? 1.59;
+    const CR = ri > 0 ? CI / ri : 0;
+    // exact principal eigenvector by power iteration (reference only)
+    let v = Array(n).fill(1 / n);
+    for (let it = 0; it < 500; it++) {
+      const nv = A.map(r => r.reduce((s, x, j) => s + x * v[j], 0));
+      const s = nv.reduce((a, b) => a + b, 0);
+      v = nv.map(x => x / s);
+    }
+    const Av = A.map(r => r.reduce((s, x, j) => s + x * v[j], 0));
+    const lambdaExact = Av.reduce((s, x, i) => s + x / v[i], 0) / n;
+    return { A, colsum, norm, w, lambda, CI, RI: ri, CR, wExact: v, lambdaExact };
+  }
+
+  function criteria(state) {
+    const n = state.criteria.length, P = pairs(n);
+    const issues = [];
+    const conv = state.pairwise.map((row, r) => P.map((_, k) => { const c = convert(row[k]); if (c.invalid) issues.push({ r, k, v: row[k] }); return c; }));
+    const agg = P.map((_, k) => geomean(conv.map(row => row[k].val)));
+    const A = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : NaN)));
+    P.forEach(([i, j], k) => { A[i][j] = agg[k]; A[j][i] = 1 / agg[k]; });
+    const ok = A.every(r => r.every(Number.isFinite));
+    const res = ok ? ahpFromMatrix(A) : null;
+    const perResp = conv.map(row => {
+      if (row.every(c => c.blank)) return null;
+      if (row.some(c => !Number.isFinite(c.val))) return { incomplete: true };
+      const M = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+      P.forEach(([i, j], k) => { M[i][j] = row[k].val; M[j][i] = 1 / row[k].val; });
+      const r = ahpFromMatrix(M); return { CR: r.CR, w: r.w };
+    });
+    const nResp = conv.filter(row => row.some(c => Number.isFinite(c.val))).length;
+    return { pairs: P, agg, res, issues, perResp, nResp, conv };
+  }
+
+  function excelRank(vals) { return vals.map(v => (Number.isFinite(v) ? 1 + vals.filter(x => Number.isFinite(x) && x > v).length : NaN)); }
+
+  function quadrant(x, y, mx, my) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return "";
+    if (x > mx && y > my) return "K1";
+    if (x > mx && y < my) return "K2";
+    if (x < mx && y > my) return "K3";
+    return "K4";
+  }
+  const mean = a => { const f = a.filter(Number.isFinite); return f.length ? f.reduce((s, x) => s + x, 0) / f.length : NaN; };
+
+  function group(g, weights, opts) {
+    const N = g.items.length, C = weights.length;
+    const issues = [];
+    const scan = (mat, label) => mat.forEach((row, i) => row.forEach((v, j) => {
+      if (isBlank(v)) return; const x = Number(v);
+      if (!Number.isFinite(x) || x < 1 || x > N || !Number.isInteger(x)) issues.push(`${label}: ${g.items[i] ? "baris " + (i + 1) : ""}, responden ${j + 1} berisi "${v}" (harus bilangan bulat 1 sampai ${N})`);
+    }));
+    g.ranks.forEach((m, c) => scan(m, `Kriteria ${c + 1}`));
+    scan(g.funding, "Pendanaan");
+    const gm = g.ranks.map(m => m.map(row => geomean(row.map(num))));
+    const norm = gm.map(col => col.map(G => (N > 1 ? ((N - G) / (N - 1)) * 100 : NaN)));
+    const score = norm.map((col, c) => col.map(s => s * weights[c]));
+    const lastExcluded = opts.excludeLastInTotal && C > 1;
+    const total = g.items.map((_, i) => score.reduce((s, col, c) => s + (lastExcluded && c === C - 1 ? 0 : col[i]), 0));
+    const rankC = score.map(excelRank);
+    const rankT = excelRank(total);
+    const fgm = g.funding.map(row => geomean(row.map(num)));
+    const fund = fgm.map(G => (N > 1 ? ((N - G) / (N - 1)) * 100 : NaN));
+    const fMean = mean(fund);
+    const qC = norm.map(col => { const mx = mean(col); return { mx, q: col.map((x, i) => quadrant(x, fund[i], mx, fMean)) }; });
+    const tMean = mean(total);
+    const qT = total.map((x, i) => quadrant(x, fund[i], tMean, fMean));
+    const priority = g.items.map((_, i) => qC.every(q => q.q[i] === "K1" || q.q[i] === "K2"));
+    const needsFinancing = fund.map(f => Number.isFinite(f) && f < 50);
+    // duplicate-rank warnings per respondent
+    const ties = [];
+    g.ranks.forEach((m, c) => { const R = m[0] ? m[0].length : 0; for (let j = 0; j < R; j++) { const col = m.map(r => r[j]).filter(v => !isBlank(v)); if (col.length && new Set(col.map(String)).size < col.length) ties.push({ c, j }); } });
+    return { N, gm, norm, score, total, rankC, rankT, fgm, fund, fMean, qC, tMean, qT, priority, needsFinancing, issues, ties, lastExcluded };
+  }
+
+  function run(state) {
+    const crit = criteria(state);
+    const replica = state.mode === "replica";
+    let weights;
+    if (replica && state.criteria.length === 3) weights = TEMPLATE_WEIGHTS.slice();
+    else weights = crit.res ? crit.res.w.slice() : state.criteria.map(() => NaN);
+    const groups = state.groups.map((g, gi) => group(g, weights, { excludeLastInTotal: replica && gi === 1 }));
+    return { crit, weights, groups, replica };
+  }
+  return { run, pairs, convert, geomean, RI, TEMPLATE_WEIGHTS, CONV };
+})();
+
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const fmt = (x, d = 2) => (Number.isFinite(x) ? x.toLocaleString("id-ID", { minimumFractionDigits: d, maximumFractionDigits: d }) : "–");
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 2800); }
+function b64enc(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function b64dec(s) { s = s.trim().replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return JSON.parse(decodeURIComponent(escape(atob(s)))); }
+const STORE = {
+  get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const SCALE_WORD = { 1: "sama penting dengan", 3: "sedikit lebih penting daripada", 5: "lebih penting daripada", 7: "sangat lebih penting daripada", 9: "mutlak lebih penting daripada" };
+// coded value convention (same as the Excel template): negative = first criterion more important
+function describePair(a, b, v) {
+  if (v === undefined || v === null || v === "") return "";
+  const x = Number(v); if (x === 1) return `${a} ${SCALE_WORD[1]} ${b}`;
+  return x < 0 ? `${a} ${SCALE_WORD[-x]} ${b}` : `${b} ${SCALE_WORD[x]} ${a}`;
+}
+// AHP for a single respondent's coded pairwise answers
+function respondentAHP(n, coded) {
+  const P = ENGINE.pairs(n);
+  const A = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : NaN)));
+  for (let k = 0; k < P.length; k++) {
+    const c = ENGINE.convert(coded[k]); if (!Number.isFinite(c.val)) return null;
+    const [i, j] = P[k]; A[i][j] = c.val; A[j][i] = 1 / c.val;
+  }
+  const colsum = A[0].map((_, j) => A.reduce((s, r) => s + r[j], 0));
+  const w = A.map(r => r.reduce((s, x, j) => s + x / colsum[j], 0) / n);
+  const lambda = colsum.reduce((s, c, j) => s + c * w[j], 0);
+  const CI = n > 1 ? (lambda - n) / (n - 1) : 0, RI = ENGINE.RI[n] ?? 1.59, CR = RI > 0 ? CI / RI : 0;
+  // pair whose judgement departs most from the weights implied by the other answers
+  let worst = -1, dev = 0;
+  P.forEach(([i, j], k) => { const d = Math.abs(Math.log(A[i][j] * w[j] / w[i])); if (d > dev) { dev = d; worst = k; } });
+  return { A, w, CR, lambda, worst };
+}
+function quadScatter(pts, mx, my, xLab) {
+  const W = 420, H = 340, L = 44, Rr = 12, T = 12, B = 40, pw = W - L - Rr, ph = H - T - B;
+  const X = v => L + (Math.max(0, Math.min(100, v)) / 100) * pw, Y = v => T + ph - (Math.max(0, Math.min(100, v)) / 100) * ph;
+  const xm = X(mx), ym = Y(my);
+  let s = `<svg class="sc" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagram kuadran ${esc(xLab)} terhadap pendanaan">`;
+  const shade = (x, y, w, h, k) => `<rect x="${x}" y="${y}" width="${Math.max(0, w)}" height="${Math.max(0, h)}" fill="var(--${k})" opacity=".08"/>`;
+  if (Number.isFinite(xm) && Number.isFinite(ym)) {
+    s += shade(xm, T, L + pw - xm, ym - T, "k1") + shade(xm, ym, L + pw - xm, T + ph - ym, "k2") + shade(L, T, xm - L, ym - T, "k3") + shade(L, ym, xm - L, T + ph - ym, "k4");
+    s += `<text x="${L + pw - 4}" y="${T + 13}" text-anchor="end" style="fill:var(--k1);font-weight:600">K1</text><text x="${L + pw - 4}" y="${T + ph - 6}" text-anchor="end" style="fill:var(--k2);font-weight:600">K2</text><text x="${L + 4}" y="${T + 13}" style="fill:var(--k3);font-weight:600">K3</text><text x="${L + 4}" y="${T + ph - 6}" style="fill:var(--k4);font-weight:600">K4</text>`;
+  }
+  for (let v = 0; v <= 100; v += 25) s += `<text x="${X(v)}" y="${T + ph + 15}" text-anchor="middle">${v}</text><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`;
+  s += `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="none" stroke="var(--line)"/>`;
+  if (Number.isFinite(xm)) s += `<line x1="${xm}" x2="${xm}" y1="${T}" y2="${T + ph}" stroke="var(--muted)" stroke-dasharray="4 3"/>`;
+  if (Number.isFinite(ym)) s += `<line x1="${L}" x2="${L + pw}" y1="${ym}" y2="${ym}" stroke="var(--muted)" stroke-dasharray="4 3"/>`;
+  s += `<text x="${L + pw / 2}" y="${H - 6}" text-anchor="middle">${esc(xLab)}</text><text transform="translate(12 ${T + ph / 2}) rotate(-90)" text-anchor="middle">Skor pendanaan</text>`;
+  pts.filter(p => Number.isFinite(p.x) && Number.isFinite(p.y)).forEach(p => {
+    s += `<g class="pt"><title>${esc(p.code + " " + p.name)}: ${fmt(p.x, 1)}, ${fmt(p.y, 1)} (${p.q})</title><circle cx="${X(p.x)}" cy="${Y(p.y)}" r="10" fill="var(--${(p.q || "K4").toLowerCase()})" stroke="var(--surface)" stroke-width="1.5"/><text x="${X(p.x)}" y="${Y(p.y) + 3.3}" text-anchor="middle">${esc(p.code)}</text></g>`;
+  });
+  return s + `</svg>`;
+}
+
+let cfg = null, api = null, ans = null, steps = [], si = 0, KEY = "";
+
+function shuffle(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function uid() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function fundOn() { return cfg.funding && cfg.funding.enabled; }
+
+async function init() {
+  const qs = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.slice(1));
+  try {
+    if (qs.get("api")) {
+      api = qs.get("api");
+      $("#app").innerHTML = `<div class="card"><p class="sub" style="margin:0">Memuat formulir…</p></div>`;
+      const r = await fetch(api + (api.includes("?") ? "&" : "?") + "action=config");
+      const j = await r.json();
+      if (!j.ok || !j.config) return fail("Survei ini belum dibuka oleh penyelenggara. Silakan hubungi penyelenggara survei.");
+      cfg = j.config;
+      if (cfg.closed) return fail("Survei ini sudah ditutup. Terima kasih atas perhatian Anda.");
+    } else if (hash.get("c")) {
+      cfg = b64dec(hash.get("c"));
+    } else return fail("Tautan formulir tidak lengkap. Mintalah tautan lengkap kepada penyelenggara survei.");
+  } catch (e) {
+    return fail("Formulir tidak dapat dimuat. Periksa koneksi internet Anda lalu muat ulang halaman ini.");
+  }
+  if (!cfg || !cfg.criteria || cfg.criteria.length < 2) return fail("Konfigurasi survei tidak valid. Hubungi penyelenggara survei.");
+  document.title = cfg.title || document.title;
+  KEY = `ahp-form-${cfg.id}-${cfg.version}`;
+  ans = STORE.get(KEY);
+  if (!ans || !ans.order || ans.order.length !== cfg.groups.length) {
+    ans = { uid: uid(), respondent: { name: "", org: "", role: "" }, pw: {}, order: cfg.groups.map(g => cfg.criteria.map(() => shuffle(g.items.length))), fund: cfg.groups.map(g => shuffle(g.items.length)), seen: {}, submitted: false };
+  }
+  steps = ["intro", "pw", "check"];
+  cfg.groups.forEach((g, gi) => cfg.criteria.forEach((_, c) => steps.push(`rank:${gi}:${c}`)));
+  if (fundOn()) cfg.groups.forEach((_, gi) => steps.push(`fund:${gi}`));
+  steps.push("review", "done");
+  si = ans.submitted ? steps.length - 1 : Math.min(ans.step || 0, steps.length - 2);
+  render();
+}
+function fail(msg) { $("#app").innerHTML = `<div class="card"><h2>Formulir tidak tersedia</h2><p class="sub" style="margin:0">${esc(msg)}</p></div>`; }
+function persist() { ans.step = si; STORE.set(KEY, ans); }
+function go(d) { si = Math.max(0, Math.min(steps.length - 1, si + d)); persist(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+
+function progress() {
+  const total = steps.length - 1, pct = Math.round((Math.min(si, total) / total) * 100);
+  return `<div class="prog" aria-label="Kemajuan ${pct}%"><i style="width:${pct}%"></i></div><div class="progtxt">Langkah ${Math.min(si + 1, total)} dari ${total}</div>`;
+}
+function nav(nextLabel = "Lanjut", nextOk = true, hint = "") {
+  return `<div class="navbar">${si > 0 ? `<button class="btn" id="back">Kembali</button>` : "<span></span>"}<span class="hint">${esc(hint)}</span><button class="btn primary" id="next" ${nextOk ? "" : "disabled"}>${esc(nextLabel)}</button></div>`;
+}
+function bindNav(onNext) {
+  const b = $("#back"); if (b) b.addEventListener("click", () => go(-1));
+  const n = $("#next"); if (n) n.addEventListener("click", () => (onNext ? onNext() : go(1)));
+}
+
+function render() {
+  const s = steps[si];
+  $("#head").innerHTML = `<h1>${esc(cfg.title || "Survei prioritas")}</h1>` + (s !== "done" ? progress() : "");
+  if (s === "intro") return rIntro();
+  if (s === "pw") return rPw();
+  if (s === "check") return rCheck();
+  if (s.startsWith("rank:")) { const [, g, c] = s.split(":").map(Number); return rRank(g, c); }
+  if (s.startsWith("fund:")) return rFund(+s.split(":")[1]);
+  if (s === "review") return rReview();
+  if (s === "done") return rDone();
+}
+
+/* ---- intro ---- */
+function rIntro() {
+  const r = ans.respondent;
+  $("#app").innerHTML = `<div class="card">${cfg.intro ? `<div class="intro">${esc(cfg.intro).replace(/\n/g, "<br>")}</div>` : ""}
+  <h3>Yang akan Anda isi</h3>
+  <ol class="plan"><li>Membandingkan tingkat kepentingan ${cfg.criteria.length} kriteria secara berpasangan.</li>
+  <li>Mengurutkan usulan ${cfg.groups.map(g => esc(g.name)).join(" dan ")} pada setiap kriteria.</li>${fundOn() ? `<li>Mengurutkan usulan menurut kemampuan daerah membiayainya.</li>` : ""}</ol>
+  <p class="note">Jawaban tersimpan otomatis di perangkat ini, sehingga Anda dapat melanjutkan nanti dari tautan yang sama.</p></div>
+  <div class="card"><h2>Identitas responden</h2>
+  <div class="fgrid"><div><label class="f" for="nm">Nama</label><input class="t" id="nm" value="${esc(r.name)}" autocomplete="name"></div>
+  <div><label class="f" for="org">Instansi atau unit kerja</label><input class="t" id="org" value="${esc(r.org)}" autocomplete="organization"></div>
+  <div><label class="f" for="role">Jabatan</label><input class="t" id="role" value="${esc(r.role)}" autocomplete="organization-title"></div></div></div>` + nav("Mulai", !!(r.name.trim() && r.org.trim()), "Nama dan instansi wajib diisi");
+  ["nm", "org", "role"].forEach(id => $("#" + id).addEventListener("input", e => {
+    ans.respondent[{ nm: "name", org: "org", role: "role" }[id]] = e.target.value; persist();
+    $("#next").disabled = !(ans.respondent.name.trim() && ans.respondent.org.trim());
+  }));
+  bindNav();
+}
+
+/* ---- pairwise ---- */
+const SCALE = [-9, -7, -5, -3, 1, 3, 5, 7, 9];
+const SCALE_SHORT = { 9: "Mutlak", 7: "Sangat", 5: "Lebih", 3: "Sedikit", 1: "Sama" };
+function rPw() {
+  const P = ENGINE.pairs(cfg.criteria.length), C = cfg.criteria;
+  let h = `<div class="card"><h2>Seberapa penting satu kriteria dibanding yang lain?</h2>
+  <p class="sub">Pada setiap pasangan, pilih kotak yang lebih dekat ke kriteria yang menurut Anda lebih penting dalam menentukan prioritas pembangunan. Makin ke tepi, makin kuat. Pilih kotak tengah bila keduanya sama penting.</p>
+  <details class="help"><summary>Arti skala</summary><div>Sedikit (3): sedikit lebih penting. Lebih (5): jelas lebih penting. Sangat (7): sangat lebih penting. Mutlak (9): mutlak lebih penting, tidak ada keraguan.</div></details></div>`;
+  P.forEach(([i, j], k) => {
+    const v = ans.pw[k];
+    h += `<fieldset class="card pair" id="pair${k}"><legend class="sr">${esc(C[i].name)} dibanding ${esc(C[j].name)}</legend>
+    <div class="pairhead"><div class="cn left"><b>${esc(C[i].name)}</b>${C[i].desc ? `<span>${esc(C[i].desc)}</span>` : ""}</div><div class="vs">atau</div><div class="cn right"><b>${esc(C[j].name)}</b>${C[j].desc ? `<span>${esc(C[j].desc)}</span>` : ""}</div></div>
+    <div class="scale" role="radiogroup" aria-label="Tingkat kepentingan">${SCALE.map(x => `<button role="radio" aria-checked="${String(v) === String(x)}" data-k="${k}" data-v="${x}" class="sc${Math.abs(x)} ${x < 0 ? "l" : x > 1 ? "r" : "m"}" title="${esc(describePair(C[i].name, C[j].name, x))}"><span class="num">${Math.abs(x)}</span><span class="w">${SCALE_SHORT[Math.abs(x)]}</span></button>`).join("")}</div>
+    <p class="said" id="said${k}">${v !== undefined ? esc(describePair(C[i].name, C[j].name, v)) + "." : "Belum dipilih."}</p></fieldset>`;
+  });
+  const done = P.every((_, k) => ans.pw[k] !== undefined);
+  $("#app").innerHTML = h + nav("Lanjut", done, done ? "" : "Lengkapi semua pasangan");
+  document.querySelectorAll(".scale button").forEach(b => b.addEventListener("click", () => {
+    const k = +b.dataset.k; ans.pw[k] = +b.dataset.v; persist();
+    b.parentElement.querySelectorAll("button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+    const [i, j] = P[k]; $("#said" + k).textContent = describePair(C[i].name, C[j].name, ans.pw[k]) + ".";
+    const ok = P.every((_, q) => ans.pw[q] !== undefined); $("#next").disabled = !ok; $(".navbar .hint").textContent = ok ? "" : "Lengkapi semua pasangan";
+  }));
+  bindNav();
+}
+function myAHP() { const P = ENGINE.pairs(cfg.criteria.length); return respondentAHP(cfg.criteria.length, P.map((_, k) => ans.pw[k])); }
+function rCheck() {
+  const r = myAHP(), C = cfg.criteria, P = ENGINE.pairs(C.length);
+  if (!r) { si = steps.indexOf("pw"); return render(); }
+  const ok = r.CR <= 0.1, order = [...C.keys()].sort((a, b) => r.w[b] - r.w[a]);
+  let h = `<div class="card"><h2>Bobot yang tersirat dari jawaban Anda</h2><p class="sub">Inilah urutan kepentingan kriteria menurut perbandingan yang Anda berikan. Periksa apakah sudah mencerminkan pendapat Anda.</p>
+  <div class="weights">${order.map(i => `<div class="wrow"><span>${esc(C[i].name)}</span><span class="wbar"><i style="width:${(r.w[i] * 100).toFixed(1)}%"></i></span><span class="val">${fmt(r.w[i] * 100, 0)}%</span></div>`).join("")}</div></div>`;
+  if (C.length >= 3) {
+    if (ok) h += `<div class="alert good">Jawaban Anda konsisten (rasio konsistensi ${fmt(r.CR, 2)}, batas 0,10).</div>`;
+    else {
+      const [i, j] = P[r.worst];
+      h += `<div class="alert warn"><b>Jawaban Anda belum konsisten</b> (rasio konsistensi ${fmt(r.CR, 2)}, batas yang lazim 0,10).<br>Contoh logika yang konsisten: bila A lebih penting dari B, dan B lebih penting dari C, maka A seharusnya lebih penting dari C.<br><br>Perbandingan yang paling tidak sejalan dengan jawaban Anda yang lain: <b>${esc(C[i].name)}</b> dibanding <b>${esc(C[j].name)}</b>. Saat ini Anda menjawab: ${esc(describePair(C[i].name, C[j].name, ans.pw[r.worst]))}.</div>
+      <div class="row" style="margin-bottom:16px"><button class="btn" id="review">Tinjau perbandingan</button></div>`;
+    }
+  }
+  $("#app").innerHTML = h + nav(ok || C.length < 3 ? "Lanjut" : "Lanjut dengan jawaban ini");
+  const rv = $("#review"); if (rv) rv.addEventListener("click", () => { si = steps.indexOf("pw"); persist(); render(); setTimeout(() => { const el = $("#pair" + r.worst); if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("flash"); } }, 50); });
+  bindNav(() => { ans.crAccepted = r.CR; go(1); });
+}
+
+/* ---- ranking ---- */
+function rankList(order, items, id) {
+  const N = order.length;
+  return `<ol class="rank" id="${id}">${order.map((it, pos) => `<li><span class="pos">${pos + 1}</span><span class="it">${esc(items[it])}</span>
+  <span class="ctl"><button class="btn small" data-mv="${pos}:-1" aria-label="Naikkan" ${pos === 0 ? "disabled" : ""}>▲</button><button class="btn small" data-mv="${pos}:1" aria-label="Turunkan" ${pos === N - 1 ? "disabled" : ""}>▼</button>
+  <select class="t" data-to="${pos}" aria-label="Pindahkan ke posisi">${order.map((_, p) => `<option value="${p}" ${p === pos ? "selected" : ""}>${p + 1}</option>`).join("")}</select></span></li>`).join("")}</ol>`;
+}
+function bindRank(order, rerender) {
+  document.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => {
+    const [p, d] = b.dataset.mv.split(":").map(Number); const q = p + d; if (q < 0 || q >= order.length) return;
+    [order[p], order[q]] = [order[q], order[p]]; persist(); rerender(q, d);
+  }));
+  document.querySelectorAll("[data-to]").forEach(s => s.addEventListener("change", () => {
+    const p = +s.dataset.to, q = +s.value; const [it] = order.splice(p, 1); order.splice(q, 0, it); persist(); rerender(q);
+  }));
+}
+function rRank(g, c) {
+  const G = cfg.groups[g], C = cfg.criteria[c], key = `r${g}-${c}`;
+  const draw = (focusPos, dir) => {
+    $("#app").innerHTML = `<div class="card"><div class="ctx">${esc(G.name)}: kriteria ${c + 1} dari ${cfg.criteria.length}</div><h2>Urutkan menurut ${esc(C.name)}</h2>
+    <p class="sub">${C.desc ? esc(C.desc) + " " : ""}Posisi 1 adalah usulan yang paling besar kontribusinya terhadap ${esc(C.name.toLowerCase())}; posisi ${G.items.length} yang paling kecil. Urutan awal diacak.</p>
+    ${rankList(ans.order[g][c], G.items, "list")}</div>` + nav("Urutan ini sudah sesuai");
+    bindRank(ans.order[g][c], draw);
+    if (focusPos !== undefined) { const el = document.querySelectorAll("#list li")[focusPos]; if (el) { el.classList.add("moved"); const btn = el.querySelector(`[data-mv="${focusPos}:${dir || -1}"]`) || el.querySelector("select"); if (btn && !btn.disabled) btn.focus(); else el.querySelector("select").focus(); } }
+    bindNav(() => { ans.seen[key] = true; go(1); });
+  };
+  draw();
+}
+function rFund(g) {
+  const G = cfg.groups[g], key = `f${g}`;
+  const draw = (focusPos, dir) => {
+    $("#app").innerHTML = `<div class="card"><div class="ctx">${esc(G.name)}: pendanaan</div><h2>Urutkan menurut kemampuan pendanaan daerah</h2>
+    <p class="sub">${esc(cfg.funding.question || "Posisi 1 adalah usulan yang paling mampu dibiayai oleh daerah sendiri tanpa pembiayaan eksternal.")} Urutan awal diacak.</p>
+    ${rankList(ans.fund[g], G.items, "list")}</div>` + nav("Urutan ini sudah sesuai");
+    bindRank(ans.fund[g], draw);
+    if (focusPos !== undefined) { const el = document.querySelectorAll("#list li")[focusPos]; if (el) { el.classList.add("moved"); const btn = el.querySelector(`[data-mv="${focusPos}:${dir || -1}"]`); if (btn && !btn.disabled) btn.focus(); else el.querySelector("select").focus(); } }
+    bindNav(() => { ans.seen[key] = true; go(1); });
+  };
+  draw();
+}
+
+/* ---- review + submit ---- */
+function buildResponse() {
+  const P = ENGINE.pairs(cfg.criteria.length), r = myAHP();
+  const toRanks = order => { const rk = Array(order.length); order.forEach((it, pos) => (rk[it] = pos + 1)); return rk; };
+  return {
+    surveyId: cfg.id, version: cfg.version, uid: ans.uid, respondent: ans.respondent,
+    pairwise: P.map((_, k) => ans.pw[k]), cr: r ? r.CR : null,
+    ranks: cfg.groups.map((_, g) => cfg.criteria.map((_, c) => toRanks(ans.order[g][c]))),
+    funding: fundOn() ? cfg.groups.map((_, g) => toRanks(ans.fund[g])) : null,
+    submittedAt: new Date().toISOString(), client: "formulir-ahp-1"
+  };
+}
+function rReview() {
+  const r = myAHP(), C = cfg.criteria, P = ENGINE.pairs(C.length);
+  const missing = steps.filter(s => (s.startsWith("rank:") || s.startsWith("fund:")) && !ans.seen[s.startsWith("rank:") ? "r" + s.slice(5).replace(":", "-") : "f" + s.slice(5)]);
+  let h = `<div class="card"><h2>Periksa sebelum mengirim</h2><p class="sub">${esc(ans.respondent.name)}, ${esc(ans.respondent.org)}${ans.respondent.role ? ", " + esc(ans.respondent.role) : ""}</p>
+  <h3>Perbandingan kriteria</h3><ul class="plain">${P.map(([i, j], k) => `<li>${esc(describePair(C[i].name, C[j].name, ans.pw[k]))}</li>`).join("")}</ul>
+  ${r && C.length >= 3 ? `<p class="note">Rasio konsistensi: ${fmt(r.CR, 2)} ${r.CR <= 0.1 ? `<span class="badge ok">konsisten</span>` : `<span class="badge no">belum konsisten</span>`}</p>` : ""}
+  <h3>Tiga teratas pada setiap urutan</h3>`;
+  cfg.groups.forEach((G, g) => {
+    cfg.criteria.forEach((Cc, c) => { h += `<p class="top3"><b>${esc(G.name)}, ${esc(Cc.name)}:</b> ${ans.order[g][c].slice(0, 3).map((it, p) => `${p + 1}. ${esc(G.items[it])}`).join("; ")}</p>`; });
+    if (fundOn()) h += `<p class="top3"><b>${esc(G.name)}, pendanaan:</b> ${ans.fund[g].slice(0, 3).map((it, p) => `${p + 1}. ${esc(G.items[it])}`).join("; ")}</p>`;
+  });
+  h += `</div>`;
+  if (missing.length) h += `<div class="alert warn">Ada ${missing.length} urutan yang belum Anda konfirmasi. Gunakan tombol Kembali untuk memeriksanya.</div>`;
+  $("#app").innerHTML = h + `<div id="sendmsg"></div>` + nav(api ? "Kirim jawaban" : "Buat kode jawaban", !missing.length);
+  bindNav(submit);
+}
+async function submit() {
+  const resp = buildResponse(); ans.last = resp; persist();
+  if (!api) { ans.submitted = true; ans.mode = "code"; go(1); return; }
+  const btn = $("#next"); btn.disabled = true; btn.textContent = "Mengirim…";
+  try {
+    const r = await fetch(api, { method: "POST", body: JSON.stringify({ action: "submit", response: resp }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "gagal");
+    ans.submitted = true; ans.mode = "sent"; go(1);
+  } catch (e) {
+    const closed = String(e.message) === "survey_closed";
+    $("#sendmsg").innerHTML = `<div class="alert warn">${closed ? "Survei ini sudah ditutup atau diperbarui oleh penyelenggara, sehingga jawaban tidak dapat diterima." : "Jawaban belum terkirim karena koneksi bermasalah. Coba lagi, atau kirim kode jawaban kepada penyelenggara."}</div>${closed ? "" : `<div class="row" style="margin-bottom:14px"><button class="btn" id="asCode">Tampilkan kode jawaban</button></div>`}`;
+    btn.disabled = false; btn.textContent = "Coba kirim lagi";
+    const ac = $("#asCode"); if (ac) ac.addEventListener("click", () => { ans.submitted = true; ans.mode = "code"; go(1); });
+  }
+}
+function rDone() {
+  const resp = ans.last || buildResponse();
+  let h;
+  if (ans.mode === "sent") h = `<div class="card done"><h2>Terima kasih, jawaban Anda sudah terkirim.</h2><p class="sub">Anda boleh menutup halaman ini. Bila ingin mengubah jawaban, gunakan tombol di bawah lalu kirim ulang; jawaban terbaru yang akan dipakai.</p></div>`;
+  else {
+    const code = "AHP1." + b64enc(resp);
+    const wa = "https://wa.me/?text=" + encodeURIComponent(`Kode jawaban survei ${cfg.title || "AHP"} dari ${resp.respondent.name}:\n${code}`);
+    h = `<div class="card done"><h2>Kirimkan kode jawaban ini kepada penyelenggara</h2>
+    <p class="sub">${cfg.contact ? `Kirim ke: <b>${esc(cfg.contact)}</b>. ` : ""}Salin seluruh kode di bawah, lalu kirim lewat WhatsApp atau email. Kode memuat semua jawaban Anda.</p>
+    <textarea class="t code" id="code" readonly>${esc(code)}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="copy">Salin kode</button><a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">Kirim lewat WhatsApp</a></div></div>`;
+  }
+  $("#app").innerHTML = h + `<div class="row"><button class="btn" id="edit">Ubah jawaban</button></div>`;
+  const cp = $("#copy"); if (cp) cp.addEventListener("click", async () => {
+    const ta = $("#code"); try { await navigator.clipboard.writeText(ta.value); toast("Kode disalin"); } catch (e) { ta.select(); try { document.execCommand("copy"); toast("Kode disalin"); } catch (_) { toast("Pilih teks kode lalu salin secara manual"); } }
+  });
+  $("#edit").addEventListener("click", () => { ans.submitted = false; si = steps.indexOf("review"); persist(); render(); });
+}
+init();
+
+</script>
+</body>
+</html>
