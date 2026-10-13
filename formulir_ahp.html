@@ -134,6 +134,23 @@ textarea.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px
 a.btn{text-decoration:none;display:inline-block}
 .wrow{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) 46px;gap:10px}
 @media (max-width:540px){ol.rank li{grid-template-columns:28px 1fr;row-gap:6px}ol.rank .ctl{grid-column:2}}
+.who{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin:-10px 0 10px}
+.who .btn{padding:3px 8px}
+form.login{max-width:420px;margin:10px auto 0}
+.pwrow{display:flex;gap:6px}
+.pwrow .btn{flex:0 0 auto}
+.btn.wide{width:100%;margin-top:16px;padding:11px;font-size:15px}
+#lerr .alert{margin:12px 0 0}
+.consent .ctext{font-size:14.5px;line-height:1.6;max-width:66ch}
+.consent .ctext h3{font-size:14.5px;margin:16px 0 4px}
+.consent .ctext p{margin:0 0 10px}
+.consent .ctext ul{margin:0 0 10px;padding-left:20px}
+.consent .ctext li{margin:0 0 4px}
+label.agree{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--sunk);cursor:pointer;font-size:14.5px}
+label.agree input{margin-top:4px;width:18px;height:18px;flex:0 0 auto}
+dl.idl{display:grid;grid-template-columns:90px 1fr;gap:6px 12px;margin:0}
+dl.idl dt{color:var(--muted);font-size:13.5px}
+dl.idl dd{margin:0;font-weight:600}
 .done h2{font-family:var(--serif);font-size:22px;font-weight:600}
 </style>
 </head>
@@ -310,45 +327,99 @@ function quadScatter(pts, mx, my, xLab) {
   return s + `</svg>`;
 }
 
-let cfg = null, api = null, ans = null, steps = [], si = 0, KEY = "";
+let cfg = null, api = null, ans = null, steps = [], si = 0, KEY = "", token = "", me = null, prevResp = null;
 
 function shuffle(n) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function uid() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function fundOn() { return cfg.funding && cfg.funding.enabled; }
+const SKEY = () => "ahp-sess:" + api;
+async function call(body) {
+  const r = await fetch(api, { method: "POST", body: JSON.stringify(body) });
+  return r.json();
+}
 
 async function init() {
-  const qs = new URLSearchParams(location.search);
-  const hash = new URLSearchParams(location.hash.slice(1));
-  try {
-    if (qs.get("api")) {
-      api = qs.get("api");
-      $("#app").innerHTML = `<div class="card"><p class="sub" style="margin:0">Memuat formulir…</p></div>`;
-      const r = await fetch(api + (api.includes("?") ? "&" : "?") + "action=config");
-      const j = await r.json();
-      if (!j.ok || !j.config) return fail("Survei ini belum dibuka oleh penyelenggara. Silakan hubungi penyelenggara survei.");
-      cfg = j.config;
-      if (cfg.closed) return fail("Survei ini sudah ditutup. Terima kasih atas perhatian Anda.");
-    } else if (hash.get("c")) {
-      cfg = b64dec(hash.get("c"));
-    } else return fail("Tautan formulir tidak lengkap. Mintalah tautan lengkap kepada penyelenggara survei.");
-  } catch (e) {
-    return fail("Formulir tidak dapat dimuat. Periksa koneksi internet Anda lalu muat ulang halaman ini.");
+  api = new URLSearchParams(location.search).get("api");
+  if (!api) return fail("Tautan formulir tidak lengkap. Mintalah tautan lengkap kepada penyelenggara survei.");
+  const saved = STORE.get(SKEY());
+  if (saved && saved.token) {
+    $("#app").innerHTML = `<div class="card"><p class="sub" style="margin:0">Memuat formulir…</p></div>`;
+    try {
+      const j = await call({ action: "config", token: saved.token });
+      if (j.ok) { token = saved.token; return start(j.config, j.profile, j.previous); }
+    } catch (e) { return fail("Formulir tidak dapat dimuat. Periksa koneksi internet Anda lalu muat ulang halaman ini."); }
   }
-  if (!cfg || !cfg.criteria || cfg.criteria.length < 2) return fail("Konfigurasi survei tidak valid. Hubungi penyelenggara survei.");
+  rLogin();
+}
+function fail(msg) { $("#head").innerHTML = `<h1>Survei prioritas pembangunan</h1>`; $("#app").innerHTML = `<div class="card"><h2>Formulir tidak tersedia</h2><p class="sub" style="margin:0">${esc(msg)}</p></div>`; }
+
+/* ---- login ---- */
+function rLogin(msg) {
+  const last = STORE.get(SKEY()) || {};
+  $("#head").innerHTML = `<h1>Survei prioritas pembangunan</h1>`;
+  $("#app").innerHTML = `<form class="card login" id="lf" novalidate><h2>Masuk</h2>
+  <p class="sub">Gunakan username dan kata sandi yang Anda terima dari penyelenggara survei.</p>
+  ${msg ? `<div class="alert warn" role="alert">${esc(msg)}</div>` : ""}
+  <label class="f" for="lu">Username</label><input class="t" id="lu" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(last.username || "")}">
+  <label class="f" for="lp" style="margin-top:12px">Kata sandi</label>
+  <div class="pwrow"><input class="t" id="lp" type="password" autocomplete="current-password"><button type="button" class="btn small" id="showpw" aria-pressed="false">Lihat</button></div>
+  <div id="lerr" role="alert"></div>
+  <button class="btn primary wide" id="lgo" type="submit">Masuk</button>
+  <p class="note">Lupa kata sandi atau tidak bisa masuk? Hubungi penyelenggara survei.</p></form>`;
+  (last.username ? $("#lp") : $("#lu")).focus();
+  $("#showpw").addEventListener("click", e => { const p = $("#lp"), on = p.type === "password"; p.type = on ? "text" : "password"; e.target.textContent = on ? "Sembunyikan" : "Lihat"; e.target.setAttribute("aria-pressed", String(on)); });
+  $("#lf").addEventListener("submit", async e => {
+    e.preventDefault();
+    const u = $("#lu").value.trim(), p = $("#lp").value, b = $("#lgo"), err = $("#lerr");
+    if (!u || !p) { err.innerHTML = `<div class="alert warn">Isi username dan kata sandi.</div>`; return; }
+    b.disabled = true; b.textContent = "Memeriksa…"; err.innerHTML = "";
+    try {
+      const j = await call({ action: "login", type: "resp", username: u, password: p });
+      if (!j.ok) {
+        err.innerHTML = `<div class="alert warn">${j.error === "locked" ? "Terlalu banyak percobaan gagal. Coba lagi sekitar 15 menit lagi." : "Username atau kata sandi salah, atau akun tidak aktif."}</div>`;
+        b.disabled = false; b.textContent = "Masuk"; return;
+      }
+      token = j.token; STORE.set(SKEY(), { token, username: j.profile.username });
+      start(j.config, j.profile, j.previous);
+    } catch (x) {
+      err.innerHTML = `<div class="alert warn">Server tidak dapat dihubungi. Periksa koneksi internet lalu coba lagi.</div>`;
+      b.disabled = false; b.textContent = "Masuk";
+    }
+  });
+}
+function logout() {
+  STORE.set(SKEY(), { username: me ? me.username : "" });
+  token = ""; me = null; cfg = null; ans = null; rLogin();
+}
+
+/* ---- session start ---- */
+function fromPrevious(p) {
+  const order = rk => rk.map((r, i) => [r, i]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const P = ENGINE.pairs(cfg.criteria.length), pw = {}; P.forEach((_, k) => (pw[k] = p.pairwise[k]));
+  const seen = {}; cfg.groups.forEach((_, g) => { cfg.criteria.forEach((_, c) => (seen[`r${g}-${c}`] = true)); seen[`f${g}`] = true; });
+  return { pw, order: cfg.groups.map((_, g) => cfg.criteria.map((_, c) => order(p.ranks[g][c]))), fund: cfg.groups.map((g, gi) => (p.funding ? order(p.funding[gi]) : shuffle(g.items.length))), seen, consentAt: p.consentAt, submitted: true, mode: "sent", last: p };
+}
+function start(config, profile, previous) {
+  me = profile;
+  if (!config) return fail("Survei ini belum dibuka oleh penyelenggara. Silakan hubungi penyelenggara survei.");
+  if (config.closed) return fail("Survei ini sudah ditutup. Terima kasih atas perhatian Anda.");
+  cfg = config;
+  if (!cfg.criteria || cfg.criteria.length < 2) return fail("Konfigurasi survei tidak valid. Hubungi penyelenggara survei.");
   document.title = cfg.title || document.title;
-  KEY = `ahp-form-${cfg.id}-${cfg.version}`;
+  KEY = `ahp-form-${cfg.id}-${cfg.version}-${me.username}`;
   ans = STORE.get(KEY);
-  if (!ans || !ans.order || ans.order.length !== cfg.groups.length) {
-    ans = { uid: uid(), respondent: { name: "", org: "", role: "" }, pw: {}, order: cfg.groups.map(g => cfg.criteria.map(() => shuffle(g.items.length))), fund: cfg.groups.map(g => shuffle(g.items.length)), seen: {}, submitted: false };
+  const valid = ans && ans.order && ans.order.length === cfg.groups.length;
+  if (!valid) {
+    try { ans = previous && previous.version === cfg.version ? fromPrevious(previous) : null; } catch (e) { ans = null; }
+    if (!ans) ans = { pw: {}, order: cfg.groups.map(g => cfg.criteria.map(() => shuffle(g.items.length))), fund: cfg.groups.map(g => shuffle(g.items.length)), seen: {}, submitted: false };
   }
-  steps = ["intro", "pw", "check"];
+  steps = ["consent", "intro", "pw", "check"];
   cfg.groups.forEach((g, gi) => cfg.criteria.forEach((_, c) => steps.push(`rank:${gi}:${c}`)));
   if (fundOn()) cfg.groups.forEach((_, gi) => steps.push(`fund:${gi}`));
   steps.push("review", "done");
   si = ans.submitted ? steps.length - 1 : Math.min(ans.step || 0, steps.length - 2);
-  render();
+  if (!ans.consentAt) si = 0;
+  persist(); render();
 }
-function fail(msg) { $("#app").innerHTML = `<div class="card"><h2>Formulir tidak tersedia</h2><p class="sub" style="margin:0">${esc(msg)}</p></div>`; }
 function persist() { ans.step = si; STORE.set(KEY, ans); }
 function go(d) { si = Math.max(0, Math.min(steps.length - 1, si + d)); persist(); render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
@@ -366,7 +437,9 @@ function bindNav(onNext) {
 
 function render() {
   const s = steps[si];
-  $("#head").innerHTML = `<h1>${esc(cfg.title || "Survei prioritas")}</h1>` + (s !== "done" ? progress() : "");
+  $("#head").innerHTML = `<div class="who"><span>Masuk sebagai <b>${esc(me.name || me.username)}</b></span><button class="btn small ghost" id="out">Keluar</button></div><h1>${esc(cfg.title || "Survei prioritas")}</h1>` + (s !== "done" ? progress() : "");
+  $("#out").addEventListener("click", () => { if (ans.submitted || confirm("Keluar sekarang? Jawaban yang sudah diisi tetap tersimpan di perangkat ini.")) logout(); });
+  if (s === "consent") return rConsent();
   if (s === "intro") return rIntro();
   if (s === "pw") return rPw();
   if (s === "check") return rCheck();
@@ -376,22 +449,48 @@ function render() {
   if (s === "done") return rDone();
 }
 
+/* ---- consent ---- */
+function richText(t) {
+  const lines = String(t || "").replace(/\r/g, "").split("\n");
+  let h = "", list = false;
+  lines.forEach((ln, i) => {
+    const x = ln.trim();
+    if (/^[-•]\s+/.test(x)) { if (!list) { h += "<ul>"; list = true; } h += `<li>${esc(x.replace(/^[-•]\s+/, ""))}</li>`; return; }
+    if (list) { h += "</ul>"; list = false; }
+    if (!x) return;
+    const next = (lines[i + 1] || "").trim();
+    if (x.length <= 50 && !/[.:;,]$/.test(x) && /^[-•]\s+/.test(next)) h += `<h3>${esc(x)}</h3>`;
+    else h += `<p>${esc(x)}</p>`;
+  });
+  if (list) h += "</ul>";
+  return h;
+}
+function consentText() {
+  return (cfg.consent || "").replace(/\{penyelenggara\}/g, cfg.organizer || "penyelenggara survei").replace(/\{kontak\}/g, cfg.contact || "penyelenggara survei");
+}
+function rConsent() {
+  const agreed = !!ans.consentAt;
+  $("#app").innerHTML = `<div class="card consent"><h2>Persetujuan sebagai responden</h2><div class="ctext">${richText(consentText())}</div>
+  <label class="agree"><input type="checkbox" id="agree" ${agreed ? "checked" : ""}> <span>Saya telah membaca dan memahami penjelasan di atas, dan saya bersedia berpartisipasi dalam survei ini.</span></label></div>
+  <div class="navbar"><button class="btn" id="decline">Tidak bersedia</button><span class="hint"></span><button class="btn primary" id="next" ${agreed ? "" : "disabled"}>Setuju dan lanjut</button></div>`;
+  $("#agree").addEventListener("change", e => ($("#next").disabled = !e.target.checked));
+  $("#decline").addEventListener("click", () => {
+    $("#app").innerHTML = `<div class="card"><h2>Terima kasih</h2><p class="sub">Anda memilih tidak berpartisipasi. Tidak ada jawaban yang dikirim. Bila berubah pikiran, Anda dapat kembali ke halaman persetujuan.</p><div class="row"><button class="btn" id="re">Kembali ke persetujuan</button><button class="btn ghost" id="out2">Keluar</button></div></div>`;
+    $("#re").addEventListener("click", render); $("#out2").addEventListener("click", logout);
+  });
+  bindNav(() => { if (!ans.consentAt) ans.consentAt = new Date().toISOString(); go(1); });
+}
+
 /* ---- intro ---- */
 function rIntro() {
-  const r = ans.respondent;
   $("#app").innerHTML = `<div class="card">${cfg.intro ? `<div class="intro">${esc(cfg.intro).replace(/\n/g, "<br>")}</div>` : ""}
   <h3>Yang akan Anda isi</h3>
   <ol class="plan"><li>Membandingkan tingkat kepentingan ${cfg.criteria.length} kriteria secara berpasangan.</li>
   <li>Mengurutkan usulan ${cfg.groups.map(g => esc(g.name)).join(" dan ")} pada setiap kriteria.</li>${fundOn() ? `<li>Mengurutkan usulan menurut kemampuan daerah membiayainya.</li>` : ""}</ol>
-  <p class="note">Jawaban tersimpan otomatis di perangkat ini, sehingga Anda dapat melanjutkan nanti dari tautan yang sama.</p></div>
+  <p class="note">Jawaban tersimpan otomatis di perangkat ini, sehingga Anda dapat melanjutkan nanti dengan masuk kembali.</p></div>
   <div class="card"><h2>Identitas responden</h2>
-  <div class="fgrid"><div><label class="f" for="nm">Nama</label><input class="t" id="nm" value="${esc(r.name)}" autocomplete="name"></div>
-  <div><label class="f" for="org">Instansi atau unit kerja</label><input class="t" id="org" value="${esc(r.org)}" autocomplete="organization"></div>
-  <div><label class="f" for="role">Jabatan</label><input class="t" id="role" value="${esc(r.role)}" autocomplete="organization-title"></div></div></div>` + nav("Mulai", !!(r.name.trim() && r.org.trim()), "Nama dan instansi wajib diisi");
-  ["nm", "org", "role"].forEach(id => $("#" + id).addEventListener("input", e => {
-    ans.respondent[{ nm: "name", org: "org", role: "role" }[id]] = e.target.value; persist();
-    $("#next").disabled = !(ans.respondent.name.trim() && ans.respondent.org.trim());
-  }));
+  <dl class="idl">${me.pemdaName ? `<dt>Pemda</dt><dd>${esc(me.pemdaName)}</dd>` : ""}<dt>Nama</dt><dd>${esc(me.name || "–")}</dd><dt>Instansi</dt><dd>${esc(me.org || "–")}</dd><dt>Jabatan</dt><dd>${esc(me.role || "–")}</dd></dl>
+  <p class="note">Data ini berasal dari daftar responden penyelenggara. Bila tidak sesuai, hubungi penyelenggara survei.</p></div>` + nav("Mulai");
   bindNav();
 }
 
@@ -486,17 +585,18 @@ function buildResponse() {
   const P = ENGINE.pairs(cfg.criteria.length), r = myAHP();
   const toRanks = order => { const rk = Array(order.length); order.forEach((it, pos) => (rk[it] = pos + 1)); return rk; };
   return {
-    surveyId: cfg.id, version: cfg.version, uid: ans.uid, respondent: ans.respondent,
+    surveyId: cfg.id, version: cfg.version, uid: "u:" + me.username, username: me.username,
+    respondent: { name: me.name, org: me.org, role: me.role }, consentAt: ans.consentAt,
     pairwise: P.map((_, k) => ans.pw[k]), cr: r ? r.CR : null,
     ranks: cfg.groups.map((_, g) => cfg.criteria.map((_, c) => toRanks(ans.order[g][c]))),
     funding: fundOn() ? cfg.groups.map((_, g) => toRanks(ans.fund[g])) : null,
-    submittedAt: new Date().toISOString(), client: "formulir-ahp-1"
+    submittedAt: new Date().toISOString(), client: "formulir-ahp-2"
   };
 }
 function rReview() {
   const r = myAHP(), C = cfg.criteria, P = ENGINE.pairs(C.length);
   const missing = steps.filter(s => (s.startsWith("rank:") || s.startsWith("fund:")) && !ans.seen[s.startsWith("rank:") ? "r" + s.slice(5).replace(":", "-") : "f" + s.slice(5)]);
-  let h = `<div class="card"><h2>Periksa sebelum mengirim</h2><p class="sub">${esc(ans.respondent.name)}, ${esc(ans.respondent.org)}${ans.respondent.role ? ", " + esc(ans.respondent.role) : ""}</p>
+  let h = `<div class="card"><h2>Periksa sebelum mengirim</h2><p class="sub">${esc(me.name)}${me.org ? ", " + esc(me.org) : ""}${me.role ? ", " + esc(me.role) : ""}</p>
   <h3>Perbandingan kriteria</h3><ul class="plain">${P.map(([i, j], k) => `<li>${esc(describePair(C[i].name, C[j].name, ans.pw[k]))}</li>`).join("")}</ul>
   ${r && C.length >= 3 ? `<p class="note">Rasio konsistensi: ${fmt(r.CR, 2)} ${r.CR <= 0.1 ? `<span class="badge ok">konsisten</span>` : `<span class="badge no">belum konsisten</span>`}</p>` : ""}
   <h3>Tiga teratas pada setiap urutan</h3>`;
@@ -506,29 +606,31 @@ function rReview() {
   });
   h += `</div>`;
   if (missing.length) h += `<div class="alert warn">Ada ${missing.length} urutan yang belum Anda konfirmasi. Gunakan tombol Kembali untuk memeriksanya.</div>`;
-  $("#app").innerHTML = h + `<div id="sendmsg"></div>` + nav(api ? "Kirim jawaban" : "Buat kode jawaban", !missing.length);
+  $("#app").innerHTML = h + `<div id="sendmsg"></div>` + nav("Kirim jawaban", !missing.length);
   bindNav(submit);
 }
 async function submit() {
   const resp = buildResponse(); ans.last = resp; persist();
-  if (!api) { ans.submitted = true; ans.mode = "code"; go(1); return; }
   const btn = $("#next"); btn.disabled = true; btn.textContent = "Mengirim…";
+  let err = "network";
   try {
-    const r = await fetch(api, { method: "POST", body: JSON.stringify({ action: "submit", response: resp }) });
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || "gagal");
-    ans.submitted = true; ans.mode = "sent"; go(1);
-  } catch (e) {
-    const closed = String(e.message) === "survey_closed";
-    $("#sendmsg").innerHTML = `<div class="alert warn">${closed ? "Survei ini sudah ditutup atau diperbarui oleh penyelenggara, sehingga jawaban tidak dapat diterima." : "Jawaban belum terkirim karena koneksi bermasalah. Coba lagi, atau kirim kode jawaban kepada penyelenggara."}</div>${closed ? "" : `<div class="row" style="margin-bottom:14px"><button class="btn" id="asCode">Tampilkan kode jawaban</button></div>`}`;
-    btn.disabled = false; btn.textContent = "Coba kirim lagi";
-    const ac = $("#asCode"); if (ac) ac.addEventListener("click", () => { ans.submitted = true; ans.mode = "code"; go(1); });
+    const j = await call({ action: "submit", token, response: resp });
+    if (j.ok) { ans.submitted = true; ans.mode = "sent"; go(1); return; }
+    err = j.error || "gagal";
+  } catch (e) { err = "network"; }
+  btn.disabled = false; btn.textContent = "Coba kirim lagi";
+  if (err === "session_expired") {
+    $("#sendmsg").innerHTML = `<div class="alert warn">Sesi Anda sudah berakhir. Masuk kembali untuk mengirim; jawaban Anda tetap tersimpan di perangkat ini.</div><div class="row" style="margin-bottom:14px"><button class="btn primary" id="relog">Masuk kembali</button></div>`;
+    $("#relog").addEventListener("click", logout); return;
   }
+  if (err === "survey_closed") { $("#sendmsg").innerHTML = `<div class="alert warn">Survei ini sudah ditutup atau diperbarui oleh penyelenggara, sehingga jawaban tidak dapat diterima. Silakan hubungi penyelenggara survei.</div>`; return; }
+  $("#sendmsg").innerHTML = `<div class="alert warn">Jawaban belum terkirim karena koneksi bermasalah. Coba lagi, atau kirim kode jawaban kepada penyelenggara.</div><div class="row" style="margin-bottom:14px"><button class="btn" id="asCode">Tampilkan kode jawaban</button></div>`;
+  $("#asCode").addEventListener("click", () => { ans.submitted = true; ans.mode = "code"; go(1); });
 }
 function rDone() {
   const resp = ans.last || buildResponse();
   let h;
-  if (ans.mode === "sent") h = `<div class="card done"><h2>Terima kasih, jawaban Anda sudah terkirim.</h2><p class="sub">Anda boleh menutup halaman ini. Bila ingin mengubah jawaban, gunakan tombol di bawah lalu kirim ulang; jawaban terbaru yang akan dipakai.</p></div>`;
+  if (ans.mode === "sent") h = `<div class="card done"><h2>Terima kasih, jawaban Anda sudah terkirim.</h2><p class="sub">Anda boleh menutup halaman ini atau menekan Keluar. Bila ingin mengubah jawaban, gunakan tombol di bawah lalu kirim ulang; jawaban terbaru yang akan dipakai. Bila perangkat ini dipakai responden lain, tekan Keluar agar mereka dapat masuk dengan akunnya sendiri.</p></div>`;
   else {
     const code = "AHP1." + b64enc(resp);
     const wa = "https://wa.me/?text=" + encodeURIComponent(`Kode jawaban survei ${cfg.title || "AHP"} dari ${resp.respondent.name}:\n${code}`);
@@ -537,7 +639,8 @@ function rDone() {
     <textarea class="t code" id="code" readonly>${esc(code)}</textarea>
     <div class="row" style="margin-top:10px"><button class="btn primary" id="copy">Salin kode</button><a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">Kirim lewat WhatsApp</a></div></div>`;
   }
-  $("#app").innerHTML = h + `<div class="row"><button class="btn" id="edit">Ubah jawaban</button></div>`;
+  $("#app").innerHTML = h + `<div class="row"><button class="btn" id="edit">Ubah jawaban</button><button class="btn" id="out3">Keluar</button></div>`;
+  $("#out3").addEventListener("click", logout);
   const cp = $("#copy"); if (cp) cp.addEventListener("click", async () => {
     const ta = $("#code"); try { await navigator.clipboard.writeText(ta.value); toast("Kode disalin"); } catch (e) { ta.select(); try { document.execCommand("copy"); toast("Kode disalin"); } catch (_) { toast("Pilih teks kode lalu salin secara manual"); } }
   });
